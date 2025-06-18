@@ -9,6 +9,7 @@ Open source management tool for the Spotify Car Thing.
   - Set boot result
   - Set active slot
   - Reset and switch to slot A
+  - Output as JSON for parsing in another program
 
 ## Usage
 
@@ -33,6 +34,7 @@ USAGE:
    wingman ab [command options]
 
 OPTIONS:
+   --json               output data in JSON format (default: false)
    --boot-result value  set the boot result. 0 for failure, 1 for success
    --slot value         set the active boot slot. 0 for A, 1 for B
    --reset              reset all boot data and switch back to slot A (default: false)
