@@ -19,6 +19,10 @@ func main() {
 				Name:  "ab",
 				Usage: "manipulate a/b data",
 				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "json",
+						Usage: "output data in JSON format",
+					},
 					&cli.StringFlag{
 						Name:  "boot-result",
 						Usage: "set the boot result. 0 for failure, 1 for success",
@@ -79,6 +83,11 @@ func main() {
 					if err != nil {
 						return err
 					}
+
+					if cCtx.Bool("json") {
+						return info.DumpJSON()
+					}
+
 					info.DumpInfo()
 					return nil
 				},

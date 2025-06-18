@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"hash/crc32"
 	"os"
@@ -22,20 +23,20 @@ const (
 )
 
 type ABSlotData struct {
-	Priority       uint8
-	TriesRemaining uint8
-	SuccessfulBoot uint8
-	Reserved       [1]uint8
+	Priority       uint8    `json:"priority"`
+	TriesRemaining uint8    `json:"tries_remaining"`
+	SuccessfulBoot uint8    `json:"successful_boot"`
+	Reserved       [1]uint8 `json:"-"`
 }
 
 type ABData struct {
-	Magic        [ABMagicLen]uint8
-	VersionMajor uint8
-	VersionMinor uint8
-	Reserved1    [2]uint8
-	Slots        [2]ABSlotData
-	Reserved2    [12]uint8
-	CRC32        uint32
+	Magic        [ABMagicLen]uint8 `json:"-"`
+	VersionMajor uint8             `json:"version_major"`
+	VersionMinor uint8             `json:"version_minor"`
+	Reserved1    [2]uint8          `json:"-"`
+	Slots        [2]ABSlotData     `json:"slots"`
+	Reserved2    [12]uint8         `json:"-"`
+	CRC32        uint32            `json:"crc32"`
 }
 
 func (info *ABData) Validate() bool {
@@ -166,5 +167,39 @@ func (info *ABData) Save() error {
 		return fmt.Errorf("failed to write misc partition: %v", err)
 	}
 
+	return nil
+}
+
+func (info *ABData) DumpJSON() error {
+	type JSONOutput struct {
+		ActiveSlot       int           `json:"active_slot"`
+		ActiveSlotLetter string        `json:"active_slot_letter"`
+		VersionMajor     uint8         `json:"version_major"`
+		VersionMinor     uint8         `json:"version_minor"`
+		Slots            [2]ABSlotData `json:"slots"`
+		CRC32            uint32        `json:"crc32"`
+	}
+
+	activeSlot := info.GetActiveSlot()
+	activeSlotLetter := "A"
+	if activeSlot == 1 {
+		activeSlotLetter = "B"
+	}
+
+	output := JSONOutput{
+		ActiveSlot:       activeSlot,
+		ActiveSlotLetter: activeSlotLetter,
+		VersionMajor:     info.VersionMajor,
+		VersionMinor:     info.VersionMinor,
+		Slots:            info.Slots,
+		CRC32:            info.CRC32,
+	}
+
+	jsonData, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to format JSON: %v", err)
+	}
+
+	fmt.Println(string(jsonData))
 	return nil
 }
